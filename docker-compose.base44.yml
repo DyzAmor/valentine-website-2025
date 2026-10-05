@@ -1,0 +1,21 @@
+# Base44 development environment.
+# The app is a zero-dependency static site (index.html + config.js + theme.js + script.js + styles.css).
+# There is no build step and no package manager, so we serve the cloned source directly from a
+# bind mount. `http.server` reads files from disk on every request, so edits are picked up on reload
+# (use reload_preview after a change — this project has no file watcher).
+services:
+  web:
+    image: python:3.12-slim
+    working_dir: /app
+    command: ["python", "-u", "-m", "http.server", "3000", "--bind", "0.0.0.0", "--directory", "/app"]
+    volumes:
+      - ./:/app
+    ports:
+      - "3000:3000"
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request,sys; sys.exit(0 if urllib.request.urlopen(\"http://localhost:3000/\").status == 200 else 1)'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
